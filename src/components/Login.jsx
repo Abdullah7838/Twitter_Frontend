@@ -13,8 +13,8 @@ function Login(props) {
             const res = await axios.post('http://localhost:3001/api/login', {
                 email, password
             });
-            props.setEmail(email);
-            props.setLogin(true);
+            // await props.setEmail(email);
+            await props.setLogin(email);
             navigate('/home');
         } catch (error) {
             if (error.status === 400) {

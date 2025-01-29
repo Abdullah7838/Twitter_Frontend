@@ -1,7 +1,15 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+function Home({email}) {
+  const navigate = useNavigate();
 
-function Home() {
+  useEffect(() => {
+    if (email === false || email === true) return; 
+    if (email !== "" && email !== null) {
+      navigate('/home'); 
+    }
+  }, [email, navigate]);
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col  items-center">
       {/* Header */}

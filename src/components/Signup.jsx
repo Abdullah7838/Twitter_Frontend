@@ -15,8 +15,8 @@ const navigate = useNavigate();
      const res = await axios.post('http://localhost:3001/api/signup',{
         email,password
      });
-     props.setEmail(email);
-     props.setLogin(true);
+    //  props.setEmail(email);
+     await props.setLogin(email);
      navigate('/home');
     }catch (error) {
         if (error.status === 400) {

@@ -5,38 +5,46 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import Home from './components/Home';
 import Profile from './components/Profile';
+import Comments from './components/Comments';
 class App extends Component {
   constructor(props) {
     super(props);
-    
+
     const savedEmail = localStorage.getItem('email');
-    const savedLogin = savedEmail ? true : false; 
 
     this.state = {
-      isLogin: savedLogin, 
-      email: savedEmail || null, 
+      email: savedEmail || null,
+      isLogin: !!savedEmail, 
     };
   }
 
-  setLogin = (isLogin) => {
-    this.setState({ isLogin });
+  // Updates both login state and email together
+  setLogin = (email) => {
+    localStorage.setItem('email', email);
+    this.setState({ email, isLogin: true });
   };
 
-  setEmail = (email) => {
-    this.setState({ email });
-    
-    localStorage.setItem('email', email);
+
+
+  logout = () => {
+    localStorage.removeItem('email');
+    this.setState({ email: null, isLogin: false });
   };
 
   render() {
     return (
       <Router>
         <Routes>
-          <Route path="/login" element={<Login setLogin={this.setLogin} setEmail={this.setEmail} />} />
-          <Route path="/signup" element={<Signup setLogin={this.setLogin} setEmail={this.setEmail} />} />
-          <Route path="/home" element={<Main email={this.state.email} />} />
-          <Route path="/profile" element={<Profile email={this.state.email} />} />
-          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login setLogin={this.setLogin} />} />
+          <Route path="/signup" element={<Signup setLogin={this.setLogin} />} />
+          <Route
+            path="/home"
+            element={<Main email={this.state.email} isLogin={this.state.isLogin} logout={this.logout} />}
+          />
+          <Route path="/profile" element={<Profile email={this.state.email} logout={this.logout}/>} />
+          <Route path="/" element={<Home email={this.state.email} />} />
+          <Route path="/comments/:id" element={<Comments email={this.state.email} />} />
+
         </Routes>
       </Router>
     );
