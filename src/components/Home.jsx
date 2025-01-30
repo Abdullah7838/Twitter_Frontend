@@ -14,16 +14,16 @@ function Home({email}) {
     <div className="min-h-screen bg-gray-100 flex flex-col  items-center">
       {/* Header */}
       <header className="w-full py-4 bg-blue-500 text-white text-center text-xl font-bold shadow-md">
-        Welcome to Mini-Twitter
+        Welcome to Meme Text
       </header>
 
       {/* Hero Section */}
       <div className="max-w-2xl text-center mt-10">
         <h1 className="text-4xl font-extrabold text-gray-900 leading-tight">
-          Connect with friends & share your thoughts
+          Connect with friends & share your memes
         </h1>
         <p className="text-gray-600 mt-4 text-lg">
-          Join Mini-Twitter today and be part of a fast-growing community.
+          Join Meme Text today and be part of a fast-growing community.
         </p>
       </div>
 
@@ -45,7 +45,7 @@ function Home({email}) {
 
       {/* Footer */}
       <footer className="absolute bottom-5 text-gray-500 text-sm">
-        © {new Date().getFullYear()} Mini-Twitter | Built with ❤️ by Abdullah
+        © {new Date().getFullYear()} Meme-Text | Built with ❤️ by Abdullah
       </footer>
     </div>
   );

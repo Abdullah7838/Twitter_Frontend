@@ -8,7 +8,9 @@ function Comments({ email }) {
   const { id } = useParams();  
   const [post, setPost] = useState(null); 
   const [comment, setComment] = useState("");
-  const [comments, setComments] = useState([]);  
+  const [comments, setComments] = useState([]); 
+  const [error, setError] = useState(false); 
+
   useEffect(() => {
     const fetchPostAndComments = async () => {
       try {
@@ -18,7 +20,8 @@ function Comments({ email }) {
         const commentsRes = await axios.get(`http://localhost:3001/api/comments/${id}`);  
         setComments(commentsRes.data.comments);  
       } catch (error) {
-        toast.error("Error fetching post or comments"); 
+        toast.error("Error fetching comments"); 
+
       }
     };
 
@@ -42,35 +45,47 @@ function Comments({ email }) {
         { email, comment, commentedAt: new Date().toISOString() }, 
       ]);
       setComment("");  
-      toast.success("Comment posted successfully!"); 
+      // toast.success("Comment posted successfully!"); 
     } catch (error) {
       toast.error("Error posting the comment"); 
     }
   };
 
+  useEffect(() => {
+    if (!post) {
+      setTimeout(() => {
+        setError(true);
+      }, 2000);
+    }
+  }, [post]);
+  
+  if (error) {
+    return <div className='text-red-600 font-bold'>ERR_CONNECTION_REFUSED</div>;
+  }
+  
   if (!post) {
-    return <div>Loading post...</div>;
+    return <div>Loading...</div>; 
   }
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-lg">
 
       {/* Post Section */}
-      <div className="border-b pb-6 mb-6">
+      <div className="border-b pb-6 mb-6 ">
         <div className="flex items-center space-x-3 mb-4">
           <div className="w-10 h-10 bg-gray-500 rounded-full"></div> {/* Placeholder for user avatar */}
           <h2 className="text-2xl font-semibold text-gray-800">{post.email.split('@')[0]}'s Post</h2>
         </div>
-        <p className="text-lg text-black">{post.post}</p>
+        <p className="text-lg text-black break-words whitespace-pre-wrap">{post.post}</p>
       </div>
 
       {/* Comments Section */}
       <div className="mt-8 mb-20">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">Comments</h3>
-        <div className="space-y-6 ">
+        <div className="space-y-6">
           {comments.length > 0 ? (
             comments.map((comment, index) => (
-              <div key={index} className="p-4 bg-gray-200 rounded-lg shadow-sm ">
+              <div key={index} className="p-4 bg-gray-200 rounded-lg shadow-sm overflow-hidden">
                 <div className="flex items-center space-x-2 mb-2">
                   <div className="w-8 h-8 bg-gray-300 rounded-full"></div> {/* Placeholder for user avatar */}
                   <p className="font-semibold text-gray-900">{comment.email.split('@')[0]}</p>
@@ -84,15 +99,15 @@ function Comments({ email }) {
         </div>
 
         {/* Post New Comment */}
-        <div className="mt-6 flex space-x-4 items-center fixed bottom-4 bg-white">
+        <div className="fixed bottom-4 left-0 right-0 bg-white p-4 flex items-center space-x-4 shadow-lg md:w-full max-w-3xl mx-auto">
           <div className="w-12 h-12 bg-gray-300 rounded-full"></div> {/* Placeholder for user avatar */}
           <div className="flex-1">
             <input
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Add a comment"
-              className="w-lg p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 "
-              rows="4"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              rows="3"
             />
           </div>
           <button

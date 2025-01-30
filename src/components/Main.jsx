@@ -18,7 +18,7 @@ export default function Main({ email: propEmail, isLogin }) {
         const fetchAllPosts = async () => {
             try {
                 const res = await axios.get("http://localhost:3001/api/post");
-                setPosts(res.data.posts);
+                setPosts(res.data.posts.reverse());
             } catch (error) {
                 toast.error("Error fetching posts");
             }
@@ -38,12 +38,15 @@ export default function Main({ email: propEmail, isLogin }) {
                     : p
             );
             setPosts(updatedPosts);
-            toast.success(res.data.message);
+            // toast.success(res.data.message);
         } catch (error) {
             toast.error("Error liking/unliking post");
         }
     };
 
+    const handleAccount = (email) => {
+        navigate(`/account/${email}`)
+    }
     // Post a new message
     const handlePost = async () => {
         if (post.length <= 2) {
@@ -88,11 +91,11 @@ export default function Main({ email: propEmail, isLogin }) {
         return `${seconds} second${seconds > 1 ? "s" : ""} ago`;
     }
 
-useEffect(()=>{
-    if(id.length>0){
-    navigate(`/comments/${id}`); 
-    } 
-},[id])
+    useEffect(() => {
+        if (id.length > 0) {
+            navigate(`/comments/${id}`);
+        }
+    }, [id])
     return (
         <div>
             {isLogin ? (
@@ -100,13 +103,13 @@ useEffect(()=>{
                     {/* Container */}
                     <div className="w-full max-w-2xl bg-white shadow-lg">
                         {/* Header */}
-                        <div className="p-4 border-b bg-white sticky top-0 z-10 flex justify-between items-center">
-                            <h1 className="text-xl font-bold text-gray-900">Home</h1>
-                            <Link to="/profile">
+                        <div className="p-4 border-b bg-white sticky top-0 z-10 flex justify-center items-center">
+                            <h1 className="text-xl font-bold text-gray-900 text-center">Home</h1>
+                            {/* <Link to="/profile">
                                 <button className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition">
                                     Profile
                                 </button>
-                            </Link>
+                            </Link> */}
                         </div>
 
                         {/* Post Input Box */}
@@ -136,18 +139,22 @@ useEffect(()=>{
                         {posts.length > 0 ? (
                             posts.map((post) => (
                                 <div key={post._id} className="p-4 border-b flex space-x-4 ">
-                                    <img src="profilepic.png" alt="User Profile" className="w-12 h-12 rounded-full" />
+                                    <img onClick={() => handleAccount(post.email)} src="profilepic.png" alt="User Profile" className="w-12 h-12 rounded-full cursor-pointer" />
                                     <div className="flex-1 overflow-hidden">
                                         <div className="flex justify-between">
                                             <div>
-                                                <span className="font-bold text-gray-900">{post.email.split('@')[0]}</span>
-                                                <span className="text-sm text-gray-500"> @{post.email.split("@")[0]} · {timeAgo(post.postedAt)}</span>
+                                                <span
+                                                    onClick={() => handleAccount(post.email)}
+                                                    className="font-bold text-gray-900 cursor-pointer">{post.email.split('@')[0]}</span>
+                                                <span
+                                                    onClick={() => handleAccount(post.email)}
+                                                    className="text-sm text-gray-500 cursor-pointer"> @{post.email.split("@")[0]} · {timeAgo(post.postedAt)}</span>
                                             </div>
                                         </div>
                                         <p className="text-gray-800 mt-1 break-words whitespace-pre-wrap">{post.post}</p>
                                         <div className="mt-2 flex space-x-6 text-gray-500 text-sm">
-                                        <button onClick={()=>setId(post._id)} className="hover:text-blue-500 text-lg flex items-center space-x-1">
-                                                💬 <span>{(Array.isArray(post.comments) ? post.comments.length : 0)}</span> 
+                                            <button onClick={() => setId(post._id)} className="hover:text-blue-500 text-lg flex items-center space-x-1">
+                                                💬 <span>{(Array.isArray(post.comments) ? post.comments.length : 0)}</span>
                                             </button>
                                             <button
                                                 onClick={() => handleLike(post._id)}
@@ -157,10 +164,11 @@ useEffect(()=>{
                                         </div>
                                     </div>
                                 </div>
-                            ))
+                            )) 
                         ) : (
                             <p className="text-center text-gray-600 p-4">No posts yet.</p>
                         )}
+                    <div className='text-black font-bold text-lg text-center mb-2 mt-2'>The End</div>
                     </div>
                 </div>
             ) : (
