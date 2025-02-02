@@ -78,7 +78,18 @@ const navigate = useNavigate();
           </a>
         </p>
       </div>
-      <ToastContainer />
+      <ToastContainer
+                position="bottom-left" 
+                autoClose={3000} 
+                hideProgressBar={false}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                toastStyle={{ backgroundColor: "black", color: "white" }} 
+            />
     </div>
   );
 }
