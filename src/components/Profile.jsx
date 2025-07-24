@@ -141,6 +141,33 @@ useEffect(() => {
     }
   };
 
+  const deleteAccount = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.delete('http://localhost:3001/api/delete-account', {
+        data: { email }
+      });
+      
+      if (response.status === 200) {
+        toast.success("Account deleted successfully!");
+        // Clear local storage
+        localStorage.removeItem('token');
+        localStorage.removeItem('email');
+        localStorage.removeItem('username');
+        
+        // Redirect to signup page after a short delay
+        setTimeout(() => {
+          props.logout();
+          navigate('/signup');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast.error(error.response?.data?.message || "Failed to delete account!");
+      setIsLoading(false);
+    }
+  };
+
   function timeAgo(date) {
     const now = new Date();
     const diff = now - new Date(date);
@@ -218,7 +245,7 @@ useEffect(() => {
                     </div>
                     
                     <h1 className="text-2xl font-bold text-gray-900 mt-4">
-                      {email.split('@')[0]}
+                      {localStorage.getItem('username') || email.split('@')[0]}
                     </h1>
                     <p className="text-gray-500 text-sm">@{email.split("@")[0]}</p>
                     <p className="text-gray-600 text-sm mt-1">{email}</p>
@@ -293,6 +320,15 @@ useEffect(() => {
                     <button className="w-full p-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl hover:from-green-600 hover:to-blue-600 transition-all duration-200 font-medium">
                       📊 Analytics
                     </button>
+                    <button 
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                          deleteAccount();
+                        }
+                      }} 
+                      className="w-full p-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 font-medium">
+                      🗑️ Delete Account
+                    </button>
                   </div>
                 </div>
               </div>
@@ -332,7 +368,7 @@ useEffect(() => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center space-x-2">
-                                    <span className="font-bold text-gray-900">{post.email.split('@')[0]}</span>
+                                    <span className="font-bold text-gray-900">{post.username || post.email.split('@')[0]}</span>
                                     <span className="text-sm text-gray-500">@{post.email.split("@")[0]}</span>
                                     <span className="text-gray-400">•</span>
                                     <span className="text-sm text-gray-500">{timeAgo(post.postedAt)}</span>

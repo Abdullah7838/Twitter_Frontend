@@ -136,14 +136,23 @@ function Comments({ email }) {
     }
 
     try {
+      // Get username from localStorage
+      const username = localStorage.getItem('username');
+      
       const res = await axios.post(`http://localhost:3001/api/comments/${id}`, {
         email,
         comment,
+        username
       });
 
       setComments((prevComments) => [
         ...prevComments,
-        { email, comment, commentedAt: new Date().toISOString() },
+        { 
+          email, 
+          comment, 
+          username,
+          commentedAt: new Date().toISOString() 
+        },
       ]);
       setComment("");
     } catch (error) {
@@ -185,7 +194,7 @@ function Comments({ email }) {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-800">
-                {post.email.split('@')[0]}'s Post
+                {post.username || post.email.split('@')[0]}'s Post
               </h2>
               <p className="text-sm text-gray-500">{timeAgo(post.postedAt)}</p>
             </div>
@@ -216,7 +225,7 @@ function Comments({ email }) {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">
-                        {comment.email.split('@')[0]}
+                        {comment.username || comment.email.split('@')[0]}
                       </p>
                       <p className="text-xs text-gray-500">{timeAgo(comment.createdAt)}</p>
                     </div>

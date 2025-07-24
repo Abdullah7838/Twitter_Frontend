@@ -7,13 +7,17 @@ import { faHeart } from "@fortawesome/free-regular-svg-icons";
 
 export default function Main({ email: propEmail, isLogin }) {
     const [post, setPost] = useState("");
-    const [email, setEmail] = useState(propEmail || "");
-    const [posts, setPosts] = useState([]);
-    const [preview, setPreview] = useState({});
-    const [profile, setProfile] = useState({});
-    const [id, setId] = useState("");
-    const [afterLike,setAfterLike] = useState(false);
-    const [isPosting, setIsPosting] = useState(false);
+const [email, setEmail] = useState(propEmail || "");
+const [username, setUsername] = useState("");
+const [posts, setPosts] = useState([]);
+const [allPosts, setAllPosts] = useState([]);
+const [preview, setPreview] = useState({});
+const [profile, setProfile] = useState({});
+const [id, setId] = useState("");
+const [afterLike,setAfterLike] = useState(false);
+const [isPosting, setIsPosting] = useState(false);
+const [trendingHashtags, setTrendingHashtags] = useState([]);
+const [activeHashtag, setActiveHashtag] = useState(null);
     const navigate = useNavigate();
 
 useEffect(()=>{
@@ -27,6 +31,12 @@ useEffect(()=>{
                 setTimeout(() => {
                     navigate('/signup');
                 }, 2000);
+              } else {
+                // Check if username is already set from localStorage, otherwise use email
+                if (!username) {
+                  const storedUsername = localStorage.getItem("username");
+                  setUsername(storedUsername || email.split('@')[0]);
+                }
               }
           } catch (err) {
               console.log(err);
@@ -81,12 +91,16 @@ useEffect(() => {
                 const res = await axios.get("http://localhost:3001/api/post");
                 const postsData = res.data.posts.reverse();
                 setPosts(postsData);
+                setAllPosts(postsData);
 
                 postsData.forEach(post => {
                     if (post.email && !preview[post.email]) {
                         fetchProfileImage(post.email);
                     }
                 });
+                
+                // Fetch trending hashtags
+                fetchTrendingHashtags();
             } catch (error) {
                 if(error.code === "ERR_NETWORK"){
                 toast.error("Connection Error!");
@@ -140,14 +154,18 @@ useEffect(() => {
             const res = await axios.post("http://localhost:3001/api/post", {
                 email,
                 post,
+                username: username || email.split('@')[0] // Include username in post
             });
 
             toast.success("Posted Successfully!");
             setPosts((prevPosts) => [
-                { _id: res.data.post._id, email, post, postedAt: new Date().toISOString(), likes: [] },
+                { _id: res.data.post._id, email, post, username: username || email.split('@')[0], postedAt: new Date().toISOString(), likes: [] },
                 ...prevPosts,
             ]);
             setPost("");
+            
+            // Refresh trending hashtags after creating a new post
+            fetchTrendingHashtags();
         } catch (error) {
             toast.error(error.response?.status === 400 ? "Login expired, please login again" : "Server Error");
         } finally {
@@ -175,6 +193,44 @@ useEffect(() => {
             navigate(`/comments/${id}`);
         }
     }, [id])
+    
+    const fetchTrendingHashtags = async () => {
+        try {
+            const response = await axios.get("http://localhost:3001/api/trending-hashtags");
+            if (response.data && response.data.hashtags) {
+                setTrendingHashtags(response.data.hashtags);
+            }
+        } catch (error) {
+            console.error("Error fetching trending hashtags:", error);
+        }
+    };
+    
+    const filterPostsByHashtag = async (hashtag) => {
+        try {
+            if (activeHashtag === hashtag) {
+                // If clicking the same hashtag, clear the filter
+                setActiveHashtag(null);
+                
+                // Fetch all posts
+                const res = await axios.get("http://localhost:3001/api/post");
+                const postsData = res.data.posts.reverse();
+                setPosts(postsData);
+            } else {
+                // Apply the filter
+                setActiveHashtag(hashtag);
+                
+                // Fetch filtered posts from backend
+                const res = await axios.get(`http://localhost:3001/api/post?hashtag=${hashtag}`);
+                if (res.data && res.data.posts) {
+                    const postsData = res.data.posts.reverse();
+                    setPosts(postsData);
+                }
+            }
+        } catch (error) {
+            console.error("Error filtering posts by hashtag:", error);
+            toast.error("Failed to filter posts");
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -205,8 +261,8 @@ useEffect(() => {
                                         />
                                         <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white"></div>
                                     </div>
-                                    <h3 className="mt-4 font-bold text-gray-900">{email.split('@')[0]}</h3>
-                                    <p className="text-sm text-gray-500">@{email.split("@")[0]}</p>
+                                    <h3 className="mt-4 font-bold text-gray-900">{username || email.split('@')[0]}</h3>
+                                    <p className="text-sm text-gray-500">@{username || email.split("@")[0]}</p>
                                 </div>
                             </div>
 
@@ -277,7 +333,21 @@ useEffect(() => {
                             </div>
 
                             {/* Posts Feed */}
-                            <div className="space-y-4">
+                            <div className="space-y-6">
+                                {activeHashtag && (
+                                    <div className="bg-blue-50 p-4 rounded-xl mb-4 flex justify-between items-center">
+                                        <div>
+                                            <p className="text-blue-700 font-medium">Showing posts with <span className="font-bold">#{activeHashtag}</span></p>
+                                            <p className="text-sm text-blue-600">{posts.length} {posts.length === 1 ? 'post' : 'posts'} found</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => filterPostsByHashtag(activeHashtag)}
+                                            className="bg-white text-blue-700 px-3 py-1 rounded-lg text-sm hover:bg-blue-100 transition-colors duration-200"
+                                        >
+                                            Clear filter
+                                        </button>
+                                    </div>
+                                )}
                                 {posts.length > 0 ? (
                                     posts.map((post, index) => (
                                         <div key={post._id} className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl border border-white/20 overflow-hidden hover:shadow-2xl transition-all duration-300 group">
@@ -298,13 +368,13 @@ useEffect(() => {
                                                                     onClick={() => handleAccount(post.email)} 
                                                                     className="font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors duration-200"
                                                                 >
-                                                                    {post.email.split('@')[0]}
+                                                                    {post.username || post.email.split('@')[0]}
                                                                 </span>
                                                                 <span 
                                                                     onClick={() => handleAccount(post.email)} 
                                                                     className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition-colors duration-200"
                                                                 >
-                                                                    @{post.email.split("@")[0]}
+                                                                    @{post.username || post.email.split("@")[0]}
                                                                 </span>
                                                                 <span className="text-gray-400">•</span>
                                                                 <span className="text-sm text-gray-500">{timeAgo(post.postedAt)}</span>
@@ -312,7 +382,24 @@ useEffect(() => {
                                                         </div>
                                                         
                                                         <p className="text-gray-800 leading-relaxed break-words whitespace-pre-wrap mb-4 text-lg">
-                                                            {post.post}
+                                                            {post.post.split(/(#\w+)/).map((part, i) => {
+                                                                if (part.startsWith('#')) {
+                                                                    const hashtag = part.substring(1);
+                                                                    return (
+                                                                        <span 
+                                                                            key={i} 
+                                                                            className="text-blue-600 hover:text-blue-800 cursor-pointer font-medium"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                filterPostsByHashtag(hashtag);
+                                                                            }}
+                                                                        >
+                                                                            {part}
+                                                                        </span>
+                                                                    );
+                                                                }
+                                                                return part;
+                                                            })}
                                                         </p>
                                                         
                                                         <div className="flex items-center space-x-8 pt-3 border-t border-gray-100">
@@ -367,20 +454,48 @@ useEffect(() => {
                         {/* Right Sidebar */}
                         <div className="lg:col-span-1 space-y-6">
                             <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-6 border border-white/20">
-                                <h4 className="font-bold text-gray-900 mb-4">Trending Now</h4>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h4 className="font-bold text-gray-900">Trending Now</h4>
+                                    {activeHashtag && (
+                                        <button 
+                                            onClick={() => filterPostsByHashtag(activeHashtag)}
+                                            className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full flex items-center gap-1 hover:bg-blue-200 transition-colors duration-200"
+                                        >
+                                            <span>#{activeHashtag}</span>
+                                            <span className="font-bold">×</span>
+                                        </button>
+                                    )}
+                                </div>
                                 <div className="space-y-3">
-                                    <div className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-                                        <p className="font-medium text-gray-800">#TruthOrDrink</p>
-                                        <p className="text-sm text-gray-600">15.2K posts</p>
-                                    </div>
-                                    <div className="p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
-                                        <p className="font-medium text-gray-800">#Gaming</p>
-                                        <p className="text-sm text-gray-600">8.7K posts</p>
-                                    </div>
-                                    <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
-                                        <p className="font-medium text-gray-800">#Community</p>
-                                        <p className="text-sm text-gray-600">5.1K posts</p>
-                                    </div>
+                                    {trendingHashtags.length > 0 ? (
+                                        trendingHashtags.map((hashtag, index) => {
+                                            // Alternate gradient backgrounds
+                                            const gradients = [
+                                                "from-blue-50 to-purple-50",
+                                                "from-green-50 to-blue-50",
+                                                "from-purple-50 to-pink-50",
+                                                "from-yellow-50 to-orange-50",
+                                                "from-pink-50 to-red-50"
+                                            ];
+                                            const gradient = gradients[index % gradients.length];
+                                            
+                                            return (
+                                                <div 
+                                                    key={hashtag.tag} 
+                                                    className={`p-3 bg-gradient-to-r ${gradient} rounded-lg cursor-pointer hover:shadow-md transition-all duration-200`}
+                                                    onClick={() => filterPostsByHashtag(hashtag.tag)}
+                                                >
+                                                    <p className="font-medium text-gray-800">#{hashtag.tag}</p>
+                                                    <p className="text-sm text-gray-600">{hashtag.count} {hashtag.count === 1 ? 'post' : 'posts'}</p>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="p-3 bg-gray-50 rounded-lg text-center">
+                                            <p className="text-gray-600">No trending hashtags yet</p>
+                                            <p className="text-sm text-gray-500">Be the first to use a hashtag!</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -392,9 +507,6 @@ useEffect(() => {
                                     </button>
                                     <button className="w-full p-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all duration-200 font-medium">
                                         👥 Find Friends
-                                    </button>
-                                    <button className="w-full p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium">
-                                        ⚙️ Settings
                                     </button>
                                 </div>
                             </div>

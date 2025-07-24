@@ -13,16 +13,18 @@ function Login(props) {
             const res = await axios.post('http://localhost:3001/api/login', {
                 email, password
             });
-            // await props.setEmail(email);
+            
+            // Store both email and username in local storage
+            localStorage.setItem('username', res.data.username);
             await props.setLogin(email);
             navigate('/home');
         } catch (error) {
-            if (error.status === 400) {
+            if (error.response && error.response.status === 400) {
                 toast.error('Wrong Email or Password');
                 return;
-             }
-            else
+            } else {
                 toast.error('Server Error');
+            }
         }
     }
     return (

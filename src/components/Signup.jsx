@@ -1,31 +1,74 @@
 import axios from 'axios'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 
 function Signup(props) {
-const [email,SetEmail] = useState('');
-const [password,SetPassword] = useState('');
+const [username, setUsername] = useState('');
+const [email, setEmail] = useState('');
+const [password, setPassword] = useState('');
+const [usernameAvailable, setUsernameAvailable] = useState(true);
+const [usernameError, setUsernameError] = useState('');
 const navigate = useNavigate();
 
-    const Signup =async(e)=>{
+    // Check username availability when username changes
+    useEffect(() => {
+        const checkUsername = async () => {
+            if (username.length < 3) {
+                setUsernameError('Username must be at least 3 characters');
+                return;
+            }
+            
+            if (username.includes('.')) {
+                setUsernameError('Username cannot contain dots (.)');
+                setUsernameAvailable(false);
+                return;
+            }
+            
+            try {
+                const response = await axios.get(`http://localhost:3001/api/check-username/${username}`);
+                setUsernameAvailable(response.data.available);
+                setUsernameError(response.data.available ? '' : response.data.message);
+            } catch (error) {
+                console.error('Error checking username:', error);
+            }
+        };
+        
+        if (username.length > 0) {
+            checkUsername();
+        } else {
+            setUsernameError('');
+            setUsernameAvailable(true);
+        }
+    }, [username]);
+
+    const Signup = async(e) => {
         e.preventDefault();
-        console.log(email,password)
-        try{
-     const res = await axios.post('http://localhost:3001/api/signup',{
-        email,password
-     });
-    //  props.setEmail(email);
-     await props.setLogin(email);
-     navigate('/home');
-    }catch (error) {
-        if (error.status === 400) {
-            toast.error('User Already exists');
+        
+        if (!usernameAvailable || username.length < 3) {
+            toast.error(usernameError || 'Please choose a valid username');
             return;
-         }
-        else
-            toast.error('Server Error');
-    }
+        }
+        
+        try {
+            const res = await axios.post('http://localhost:3001/api/signup', {
+                username,
+                email,
+                password
+            });
+            
+            // Store both email and username in local storage
+            localStorage.setItem('username', res.data.username);
+            await props.setLogin(email);
+            navigate('/home');
+        } catch (error) {
+            if (error.response && error.response.status === 400) {
+                toast.error(error.response.data.message || 'Registration failed');
+                return;
+            } else {
+                toast.error('Server Error');
+            }
+        }
     }
 
   return (
@@ -39,10 +82,27 @@ const navigate = useNavigate();
         <form onSubmit={Signup}>
           <div className="mb-4">
             <label className="block text-gray-700 font-medium mb-1">
+              Username
+            </label>
+            <input
+              onChange={(e) => setUsername(e.target.value)}
+              type="text"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${usernameAvailable ? 'focus:ring-blue-400' : 'focus:ring-red-400 border-red-300'}`}
+              placeholder="Choose a username"
+              required
+              minLength="3"
+            />
+            {usernameError && (
+              <p className="text-red-500 text-xs mt-1">{usernameError}</p>
+            )}
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 font-medium mb-1">
               Email
             </label>
             <input
-              onChange={(e)=>SetEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               type="email"
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Enter your email"
@@ -55,11 +115,12 @@ const navigate = useNavigate();
               Password
             </label>
             <input
-             onChange={(e)=>SetPassword(e.target.value)}
+             onChange={(e) => setPassword(e.target.value)}
               type="password"
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Enter your password"
               required
+              minLength="6"
             />
           </div>
 

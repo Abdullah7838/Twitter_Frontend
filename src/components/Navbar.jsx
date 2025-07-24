@@ -1,10 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Home, User, LogOut, Menu, X } from "lucide-react";
+import { Home, User, LogOut, Menu, X, Bell, Settings } from "lucide-react";
+import Notifications from "./Notifications";
+import UserSettings from "./UserSettings";
 
 function Navbar({ logout }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
+  
+  const email = localStorage.getItem("email");
+  const username = localStorage.getItem("username");
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50 w-full">
@@ -19,7 +27,7 @@ function Navbar({ logout }) {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-6">
             <Link
               to="/home"
               className="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 font-medium"
@@ -32,8 +40,32 @@ function Navbar({ logout }) {
               className="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 font-medium"
             >
               <User className="mr-2" size={22} />
-              Profile
+              {username ? username : 'Profile'}
             </Link>
+            
+            {/* Notifications Button */}
+            <button
+              onClick={() => setShowNotifications(true)}
+              className="relative flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 font-medium"
+            >
+              <Bell className="mr-2" size={22} />
+              Notifications
+              {unreadCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+            
+            {/* Settings Button */}
+            <button
+              onClick={() => setShowSettings(true)}
+              className="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 font-medium"
+            >
+              <Settings className="mr-2" size={22} />
+              Settings
+            </button>
+            
             <button
               onClick={() => {
                 logout();
@@ -76,8 +108,38 @@ function Navbar({ logout }) {
           className="flex items-center px-5 py-3 text-gray-700 hover:bg-gray-100 transition"
         >
           <User className="mr-3" size={20} />
-          Profile
+          {username ? username : 'Profile'}
         </Link>
+        
+        {/* Mobile Notifications */}
+        <button
+          onClick={() => {
+            setShowNotifications(true);
+            setIsOpen(false);
+          }}
+          className="flex items-center w-full px-5 py-3 text-gray-700 hover:bg-gray-100 transition"
+        >
+          <Bell className="mr-3" size={20} />
+          Notifications
+          {unreadCount > 0 && (
+            <span className="ml-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+        
+        {/* Mobile Settings */}
+        <button
+          onClick={() => {
+            setShowSettings(true);
+            setIsOpen(false);
+          }}
+          className="flex items-center w-full px-5 py-3 text-gray-700 hover:bg-gray-100 transition"
+        >
+          <Settings className="mr-3" size={20} />
+          Settings
+        </button>
+        
         <button
           onClick={() => {
             logout();
@@ -90,6 +152,20 @@ function Navbar({ logout }) {
           Logout
         </button>
       </div>
+      
+      {/* Notifications Component */}
+      <Notifications 
+        email={email} 
+        isOpen={showNotifications} 
+        onClose={() => setShowNotifications(false)} 
+      />
+      
+      {/* User Settings Component */}
+      <UserSettings 
+        email={email} 
+        isOpen={showSettings} 
+        onClose={() => setShowSettings(false)} 
+      />
     </nav>
   );
 }

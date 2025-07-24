@@ -16,16 +16,15 @@ function Account({ logout, Uemail, myemail }) {
     const [preview, setPreview] = useState(null);
     const navigate = useNavigate();
 
-useEffect(() => {
+    useEffect(() => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
 
-
-useEffect(()=>{
-    if(email===myemail){
-    navigate('/profile');
-    }
-})
+    useEffect(()=>{
+        if(email===myemail){
+            navigate('/profile');
+        }
+    })
 
     useEffect(() => {
         const fetchProfilePhoto = async () => {
@@ -48,7 +47,6 @@ useEffect(()=>{
         }
     }, [email]);
 
-
     useEffect(() => {
         const fetchFollowers = async () => {
             const followers = await axios.post('http://localhost:3001/api/followers', {
@@ -62,7 +60,6 @@ useEffect(()=>{
         };
         fetchFollowers();
     }, [hide1, hide2])
-
 
     const FollowHandle = async () => {
         try {
@@ -94,29 +91,11 @@ useEffect(()=>{
         }
     };
 
-   
-
-    // const Logout = () => {
-    //   props.logout();
-    //   navigate("/login");
-    // };
-
     useEffect(() => {
         const fetchPosts = async () => {
             try {
                 const response = await axios.get(`http://localhost:3001/api/user/${email}`);
                 setPosts(response.data);
-                // toast.success("Posts loaded successfully!", {
-                //   position: "top-right", 
-                //   autoClose: 200, 
-                //   hideProgressBar: false, 
-                //   closeOnClick: true, 
-                //   pauseOnHover: true, 
-                //   draggable: true, 
-                //   progress: undefined,
-                //   theme: "light", 
-                //   transition: Bounce, 
-                // });
             } catch (error) {
                 console.error("Error fetching posts:", error);
                 toast.error("Failed to load posts!");
@@ -128,7 +107,7 @@ useEffect(()=>{
         }
     }, [email, posts]);
 
-function timeAgo(date) {
+    function timeAgo(date) {
         const now = new Date();
         const diff = now - new Date(date);
 
@@ -155,7 +134,6 @@ function timeAgo(date) {
                     : p
             );
             setPosts(updatedPosts);
-            //   toast.success(res.data.message);
         } catch (error) {
             toast.error("Error liking/unliking post");
         }
@@ -168,78 +146,173 @@ function timeAgo(date) {
     }, [id])
 
     return (
-        <div className="min-h-screen bg-gray-100 flex justify-center">
-            {/* Profile Container */}
-            <div className="w-full max-w-2xl bg-white shadow-lg">
-
-                {/* Header */}
-                <div className="p-4 bg-white flex justify-between items-center sticky top-0 z-10">
-                    <h1 className="text-xl font-bold text-gray-900"></h1>
-                    {/* <div className="flex space-x-4">
-            <button
-              onClick={Logout}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition"
-            >
-              Logout
-            </button>
-            <button
-              onClick={() => navigate("/home")}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-600 transition"
-            >
-              Home
-            </button>
-          </div> */}
-                </div>
-
-                {/* Email Display */}
-                <div className="flex justify-center">
-                    {preview && (
-                        <div className=" flex justify-start">
-                            <img src={preview} alt="Preview" style={{ width: "100px", height: "100px", borderRadius: "50%" }} />
-                        </div>
-                    )}
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
+            <div className="max-w-4xl mx-auto px-4 py-6">
+                {/* Profile Header */}
+                <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 overflow-hidden mb-6">
+                    {/* Cover Section */}
+                    <div className="h-32 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 relative">
+                        <div className="absolute inset-0 bg-black/10"></div>
                     </div>
-                <div className="p-1 text-center">
-                    <p className="text-lg font-semibold text-gray-700">User: {email.split('@')[0]}</p>
-                </div>
-                    <div className="border-t pt-2 pb-2  ">
-                        <div className="ml-8 mr-8 lg:ml-12 lg:mr-12 flex justify-between items-center">
-                            <button onClick={FollowHandle} className={`bg-red-500 hover:bg-red-600 text-white font-bold p-2 rounded mb-1 mt-1 cursor-pointer ${hide1}`}>Follow</button>
-                            <button onClick={UnfollowHandle} className={`bg-red-500 hover:bg-red-600 text-white font-bold p-2 rounded mb-1 mt-1 cursor-pointer ${hide2}`} >Unfollow</button>
-                            <p className="text-lg font-semibold text-orange-500">Followers: <strong>{followers}</strong></p>
-                            <p className="text-lg font-semibold text-orange-500">Posts: <strong>{posts.length}</strong></p>
-                        </div>
-                    </div>
-                    {/* Posts Section */}
-                    <div>
-                        {posts.length > 0 ? (
-                            posts.map((post) => (
-                                <div key={post._id} className="p-4 border-t flex space-x-4 max-h-full overflow-auto">
-                                    <img
-                                        src={preview}
-                                        alt="user"
-                                        className="w-12 h-12 rounded-full"
+                    
+                    {/* Profile Info */}
+                    <div className="relative px-8 pb-8">
+                        {/* Profile Picture */}
+                        <div className="flex justify-center -mt-16 mb-6">
+                            <div className="relative">
+                                {preview ? (
+                                    <img 
+                                        src={preview} 
+                                        alt="Profile" 
+                                        className="w-32 h-32 rounded-full border-4 border-white shadow-xl object-cover bg-white"
                                     />
-                                    <div className="w-full max-w-[90%]">
-                                        <div className="flex items-center space-x-2">
-                                            <span className="font-bold text-gray-900">{post.email.split('@')[0]}</span>
-                                            <span className="text-sm text-gray-500">@{post.email.split('@')[0]} · {timeAgo(post.postedAt)}</span>
+                                ) : (
+                                    <div className="w-32 h-32 rounded-full border-4 border-white shadow-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                                        <span className="text-white text-4xl font-bold">
+                                            {email?.charAt(0).toUpperCase()}
+                                        </span>
+                                    </div>
+                                )}
+                                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-400 rounded-full border-4 border-white shadow-lg"></div>
+                            </div>
+                        </div>
+
+                        {/* User Info */}
+                        <div className="text-center mb-6">
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                {localStorage.getItem('username') || email?.split('@')[0]}
+                            </h1>
+                            <p className="text-gray-600 text-lg">@{email?.split('@')[0]}</p>
+                        </div>
+
+                        {/* Stats & Actions */}
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                            {/* Stats */}
+                            <div className="flex gap-8">
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-gray-900">{posts.length}</div>
+                                    <div className="text-sm text-gray-600 font-medium">Posts</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-gray-900">{followers}</div>
+                                    <div className="text-sm text-gray-600 font-medium">Followers</div>
+                                </div>
+                            </div>
+
+                            {/* Follow Buttons */}
+                            <div className="flex gap-3">
+                                <button 
+                                    onClick={FollowHandle} 
+                                    className={`${hide1} bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold px-8 py-3 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl`}
+                                >
+                                    Follow
+                                </button>
+                                <button 
+                                    onClick={UnfollowHandle} 
+                                    className={`${hide2} bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold px-8 py-3 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl`}
+                                >
+                                    Unfollow
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Posts Section */}
+                <div className="space-y-4">
+                    {posts.length > 0 ? (
+                        posts.map((post, index) => (
+                            <div 
+                                key={post._id} 
+                                className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                            >
+                                <div className="flex space-x-4">
+                                    {/* Post Avatar */}
+                                    <div className="flex-shrink-0">
+                                        {preview ? (
+                                            <img
+                                                src={preview}
+                                                alt="user"
+                                                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
+                                            />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center border-2 border-white shadow-md">
+                                                <span className="text-white text-lg font-semibold">
+                                                    {post.email?.charAt(0).toUpperCase()}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Post Content */}
+                                    <div className="flex-1 min-w-0">
+                                        {/* Post Header */}
+                                        <div className="flex items-center space-x-2 mb-3">
+                                            <span className="font-bold text-gray-900 text-lg">
+                                                {post.username || post.email?.split('@')[0]}
+                                            </span>
+                                            <span className="text-gray-500">•</span>
+                                            <span className="text-sm text-gray-500 font-medium">
+                                                {timeAgo(post.postedAt)}
+                                            </span>
                                         </div>
-                                        <p className="text-gray-800 mt-1 text-lg break-words whitespace-pre-wrap max-w-full overflow-hidden">{post.post}</p>
-                                        <div className="mt-2 flex space-x-6 text-gray-500 text-sm">
-                                            <button onClick={() => setId(post._id)} className="hover:text-blue-500 text-lg flex items-center space-x-1 cursor-pointer">
-                                                💬 <span>{(Array.isArray(post.comments) ? post.comments.length : 0)}</span> </button>
-                                            <button onClick={() => handleLike(post._id)} className="hover:text-red-500 text-lg flex items-center space-x-1 cursor-pointer" >
-                                                ❤️ <span>{(Array.isArray(post.likes) ? post.likes.length : 0)}</span>                      </button> </div>
+
+                                        {/* Post Text */}
+                                        <p className="text-gray-800 text-lg leading-relaxed mb-4 whitespace-pre-wrap">
+                                            {post.post}
+                                        </p>
+
+                                        {/* Post Actions */}
+                                        <div className="flex items-center space-x-8 pt-3 border-t border-gray-100">
+                                            <button 
+                                                onClick={() => setId(post._id)} 
+                                                className="flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition-colors duration-200 group"
+                                            >
+                                                <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors duration-200">
+                                                    <span className="text-xl">💬</span>
+                                                </div>
+                                                <span className="font-medium">
+                                                    {Array.isArray(post.comments) ? post.comments.length : 0}
+                                                </span>
+                                            </button>
+                                            
+                                            <button 
+                                                onClick={() => handleLike(post._id)} 
+                                                className="flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors duration-200 group"
+                                            >
+                                                <div className="p-2 rounded-full group-hover:bg-red-50 transition-colors duration-200">
+                                                    <span className="text-xl">❤️</span>
+                                                </div>
+                                                <span className="font-medium">
+                                                    {Array.isArray(post.likes) ? post.likes.length : 0}
+                                                </span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            ))
-                        ) : (
-                            <p className="p-4 text-center text-gray-600">No posts found.</p>
-                        )}
-                        <div className='text-black font-bold text-lg text-center mb-2 mt-2 border-t'>The End</div>
-                    </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-12 text-center">
+                            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                                <span className="text-4xl">📝</span>
+                            </div>
+                            <p className="text-xl text-gray-600 font-medium">No posts yet</p>
+                            <p className="text-gray-500 mt-2">This user hasn't shared anything yet.</p>
+                        </div>
+                    )}
+
+                    {posts.length > 0 && (
+                        <div className="bg-white/60 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6 text-center">
+                            <div className="text-gray-600 font-semibold text-lg flex items-center justify-center space-x-2">
+                                <span>✨</span>
+                                <span>You've reached the end</span>
+                                <span>✨</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
+            </div>
 
                 <ToastContainer
                 position="bottom-left" 
