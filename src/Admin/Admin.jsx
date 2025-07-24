@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 
 function Admin() {
@@ -29,8 +30,8 @@ useEffect(()=>{
         try {
             setLoading(true);
             const res = await axios.get("http://localhost:3001/api/posts");
-            setPosts(res.data.data);
-        } catch (err) {
+            setPosts([...res.data.data].reverse());
+         } catch (err) {
             console.error("Error fetching posts", err);
         } finally {
             setLoading(false);
@@ -132,6 +133,21 @@ const deleteUser = async (userId) => {
             console.log(err);
         }
     };
+
+function timeAgo(date) {
+        const now = new Date();
+        const diff = now - new Date(date);
+    
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+    
+        if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`;
+        if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+        if (minutes > 0) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+        return `${seconds} second${seconds > 1 ? "s" : ""} ago`;
+      }
     return (
         <div className="max-w-4xl mx-auto p-6">
             {/* Admin controls */}
@@ -165,6 +181,7 @@ const deleteUser = async (userId) => {
                 <div className="users-list">
                     {users.map((user) => (
                         <div key={user._id} className="user-card p-4 flex justify-between items-center border-b">
+                            <Link to={`/admin/${user.email}`}>
                             <div className="user-info flex items-center space-x-4">
                                 <img
                                     src={user.profilePhoto || 'defaultProfilePic.jpg'}
@@ -172,10 +189,11 @@ const deleteUser = async (userId) => {
                                     className="w-12 h-12 rounded-full"
                                 />
                                 <div>
-                                    <p className="text-black">{user.email}</p>
-                                    <p className="text-sm text-gray-500">Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
+                                <span className="text-sm text-gray-500">@{user.email}</span>
+                                <p className="text-sm text-gray-500">Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
                                 </div>
                             </div>
+                            </Link>
                             <button
                                 onClick={() => deleteUser(user._id)}
                                 className="bg-red-500 text-white px-4 py-2 rounded"
@@ -189,14 +207,14 @@ const deleteUser = async (userId) => {
 
             {/* Posts Section */}
             <div className="space-y-6">
-                <h2 className="text-2xl font-semibold">All Posts</h2>
+                <h2 className="text-2xl font-semibold">Latest Posts</h2>
                 {loading ? (
                     <p className="text-center">Loading...</p>
                 ) : (
                     posts.map((post) => (
                         <div key={post._id} className="border rounded-lg p-4 shadow-sm bg-white">
                             <div className="flex justify-between items-center mb-4">
-                                <p className="font-medium text-lg">{post.email}</p>
+                                <p className="font-medium text-lg">{post.email} · {timeAgo(post.postedAt)}</p>
                                 <button
                                     onClick={() => deletePost(post._id)}
                                     className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600"

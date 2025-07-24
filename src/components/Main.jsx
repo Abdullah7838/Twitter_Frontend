@@ -13,6 +13,7 @@ export default function Main({ email: propEmail, isLogin }) {
     const [profile, setProfile] = useState({});
     const [id, setId] = useState("");
     const [afterLike,setAfterLike] = useState(false);
+    const [isPosting, setIsPosting] = useState(false);
     const navigate = useNavigate();
 
 useEffect(()=>{
@@ -87,6 +88,10 @@ useEffect(() => {
                     }
                 });
             } catch (error) {
+                if(error.code === "ERR_NETWORK"){
+                toast.error("Connection Error!");
+                return;
+            }
                 toast.error("Error fetching posts");
             }
         };
@@ -130,6 +135,7 @@ useEffect(() => {
             return;
         }
 
+        setIsPosting(true);
         try {
             const res = await axios.post("http://localhost:3001/api/post", {
                 email,
@@ -144,6 +150,8 @@ useEffect(() => {
             setPost("");
         } catch (error) {
             toast.error(error.response?.status === 400 ? "Login expired, please login again" : "Server Error");
+        } finally {
+            setIsPosting(false);
         }
     };
 
@@ -167,84 +175,250 @@ useEffect(() => {
             navigate(`/comments/${id}`);
         }
     }, [id])
+
     return (
-        <div className="bg-gray-50 min-h-screen flex justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
             {isLogin ? (
-                <div className="w-full max-w-2xl bg-white shadow-lg rounded-lg overflow-hidden">
-                    <div className="p-5 border-b bg-blue-500 text-white text-center font-semibold text-xl sticky top-0 z-10">
-                        Home
-                    </div>
-
-                    <div className="p-5 border-b bg-white">
-                        <div className="flex items-center space-x-4">
-                            <img src={profile} alt="Profile" className="w-12 h-12 rounded-full" />
-                            <textarea
-                                value={post}
-                                onChange={(e) => setPost(e.target.value)}
-                                className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                placeholder="What's meme today?"
-                                rows="3"
-                            ></textarea>
-                        </div>
-                        <div className="flex justify-between items-center mt-3">
-                            <p className="text-sm text-gray-500">{post.length}/280</p>
-                            <button
-                                onClick={handlePost}
-                                className="px-5 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition"
-                            >
-                                Post
-                            </button>
+                <div className="max-w-6xl mx-auto px-4 py-6">
+                    {/* Header */}
+                    <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl mb-6 border border-white/20">
+                        <div className="px-8 py-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white text-center font-bold text-2xl rounded-t-2xl">
+                            <div className="flex items-center justify-center space-x-3">
+                                {/* <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                                    <span className="text-lg">🏠</span>
+                                </div> */}
+                                <span>Home Feed</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div>
-                        {posts.length > 0 ? (
-                            posts.map((post) => (
-                                <div key={post._id} className="p-5 border-b flex space-x-4">
-                                    <img
-                                        onClick={() => handleAccount(post.email)}
-                                        src={preview[post.email] || "profilepic.png"}
-                                        alt="User Profile"
-                                        className="w-12 h-12 rounded-full cursor-pointer"
-                                    />
-                                    <div className="flex-1 overflow-hidden">
-                                        <div className="flex justify-between">
-                                            <div>
-                                                <span onClick={() => handleAccount(post.email)} className="font-bold text-gray-900 cursor-pointer">
-                                                    {post.email.split('@')[0]}
-                                                </span>
-                                                <span onClick={() => handleAccount(post.email)} className="text-sm text-gray-500 cursor-pointer">
-                                                    @{post.email.split("@")[0]} · {timeAgo(post.postedAt)}
-                                                </span>
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        {/* Left Sidebar */}
+                        <div className="lg:col-span-1 space-y-6">
+                            <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-6 border border-white/20">
+                                <div className="text-center">
+                                    <div className="relative inline-block">
+                                        <img 
+                                            src={profile || "profilepic.png"} 
+                                            alt="Your Profile" 
+                                            className="w-20 h-20 rounded-full mx-auto border-4 border-gradient-to-r from-blue-400 to-purple-400 shadow-lg"
+                                        />
+                                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white"></div>
+                                    </div>
+                                    <h3 className="mt-4 font-bold text-gray-900">{email.split('@')[0]}</h3>
+                                    <p className="text-sm text-gray-500">@{email.split("@")[0]}</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-6 border border-white/20">
+                                <h4 className="font-bold text-gray-900 mb-4">Quick Stats</h4>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600">Posts</span>
+                                        <span className="font-semibold text-blue-600">{posts.filter(p => p.email === email).length}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600">Total Likes</span>
+                                        <span className="font-semibold text-red-500">
+                                            {posts.filter(p => p.email === email).reduce((sum, p) => sum + (Array.isArray(p.likes) ? p.likes.length : 0), 0)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Main Content */}
+                        <div className="lg:col-span-2 space-y-6">
+                            {/* Create Post */}
+                            <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl border border-white/20 overflow-hidden">
+                                <div className="p-6">
+                                    <div className="flex items-start space-x-4">
+                                        <img 
+                                            src={profile || "profilepic.png"} 
+                                            alt="Profile" 
+                                            className="w-12 h-12 rounded-full border-2 border-blue-200 shadow-sm flex-shrink-0"
+                                        />
+                                        <div className="flex-1">
+                                            <textarea
+                                                value={post}
+                                                onChange={(e) => setPost(e.target.value)}
+                                                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 resize-none bg-gray-50/50"
+                                                placeholder="What's on your mind today? 🤔"
+                                                rows="4"
+                                            />
+                                            <div className="flex justify-between items-center mt-4">
+                                                <div className="flex items-center space-x-2">
+                                                    <span className={`text-sm font-medium ${post.length > 250 ? 'text-red-500' : post.length > 200 ? 'text-orange-500' : 'text-gray-500'}`}>
+                                                        {post.length}/280
+                                                    </span>
+                                                    <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
+                                                        <div 
+                                                            className={`h-full transition-all duration-200 ${post.length > 250 ? 'bg-red-500' : post.length > 200 ? 'bg-orange-500' : 'bg-blue-500'}`}
+                                                            style={{ width: `${(post.length / 280) * 100}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={handlePost}
+                                                    disabled={isPosting || !post.trim() || post.length <= 2 || post.length >= 280}
+                                                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                                                >
+                                                    {isPosting ? (
+                                                        <div className="flex items-center space-x-2">
+                                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                            <span>Posting...</span>
+                                                        </div>
+                                                    ) : 'Post'}
+                                                </button>
                                             </div>
-                                        </div>
-                                        <p className="text-gray-800 mt-2 break-words whitespace-pre-wrap">{post.post}</p>
-                                        <div className="mt-3 flex space-x-6 text-gray-500 text-sm">
-                                            <button onClick={() => setId(post._id)} className="hover:text-blue-500 text-lg flex items-center space-x-1 cursor-pointer">💬 <span>{(Array.isArray(post.comments) ? post.comments.length : 0)}</span></button>
-                                            <button onClick={() => handleLike(post._id)} className="hover:text-red-500 text-lg flex items-center space-x-1 cursor-pointer">
-                                            <FontAwesomeIcon icon={faHeart} size="1x" style={{ color: "red" }} />
-                                                <span>{(Array.isArray(post.likes) ? post.likes.length : 0)}</span></button>
                                         </div>
                                     </div>
                                 </div>
-                            ))
-                        ) : (
-                            <p className="text-center text-gray-600 p-5">No posts yet.</p>
-                        )}
+                            </div>
+
+                            {/* Posts Feed */}
+                            <div className="space-y-4">
+                                {posts.length > 0 ? (
+                                    posts.map((post, index) => (
+                                        <div key={post._id} className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl border border-white/20 overflow-hidden hover:shadow-2xl transition-all duration-300 group">
+                                            <div className="p-6">
+                                                <div className="flex space-x-4">
+                                                    <div className="flex-shrink-0">
+                                                        <img
+                                                            onClick={() => handleAccount(post.email)}
+                                                            src={preview[post.email] || "profilepic.png"}
+                                                            alt="User Profile"
+                                                            className="w-12 h-12 rounded-full cursor-pointer border-2 border-gray-200 hover:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <div className="flex items-center space-x-2">
+                                                                <span 
+                                                                    onClick={() => handleAccount(post.email)} 
+                                                                    className="font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors duration-200"
+                                                                >
+                                                                    {post.email.split('@')[0]}
+                                                                </span>
+                                                                <span 
+                                                                    onClick={() => handleAccount(post.email)} 
+                                                                    className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition-colors duration-200"
+                                                                >
+                                                                    @{post.email.split("@")[0]}
+                                                                </span>
+                                                                <span className="text-gray-400">•</span>
+                                                                <span className="text-sm text-gray-500">{timeAgo(post.postedAt)}</span>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <p className="text-gray-800 leading-relaxed break-words whitespace-pre-wrap mb-4 text-lg">
+                                                            {post.post}
+                                                        </p>
+                                                        
+                                                        <div className="flex items-center space-x-8 pt-3 border-t border-gray-100">
+                                                            <button 
+                                                                onClick={() => setId(post._id)} 
+                                                                className="flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-all duration-200 group/button"
+                                                            >
+                                                                <div className="p-2 rounded-full group-hover/button:bg-blue-50 transition-colors duration-200">
+                                                                    <span className="text-lg">💬</span>
+                                                                </div>
+                                                                <span className="font-medium">{(Array.isArray(post.comments) ? post.comments.length : 0)}</span>
+                                                            </button>
+                                                            
+                                                            <button 
+                                                                onClick={() => handleLike(post._id)} 
+                                                                className="flex items-center space-x-2 text-gray-500 hover:text-red-500 transition-all duration-200 group/button"
+                                                            >
+                                                                <div className="p-2 rounded-full group-hover/button:bg-red-50 transition-colors duration-200">
+                                                                    <FontAwesomeIcon 
+                                                                        icon={faHeart} 
+                                                                        className="text-red-500 hover:scale-110 transition-transform duration-200" 
+                                                                    />
+                                                                </div>
+                                                                <span className="font-medium">{(Array.isArray(post.likes) ? post.likes.length : 0)}</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl border border-white/20 p-12 text-center">
+                                        <div className="text-6xl mb-4">📝</div>
+                                        <p className="text-xl text-gray-600 font-medium mb-2">No posts yet</p>
+                                        <p className="text-gray-500">Be the first to share something!</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {posts.length > 0 && (
+                                <div className="text-center py-8">
+                                    <div className="inline-flex items-center space-x-2 text-gray-500 font-medium">
+                                        <div className="w-12 h-px bg-gradient-to-r from-transparent to-gray-300"></div>
+                                        <span className="text-lg">🎉 You've reached the end! 🎉</span>
+                                        <div className="w-12 h-px bg-gradient-to-l from-transparent to-gray-300"></div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Right Sidebar */}
+                        <div className="lg:col-span-1 space-y-6">
+                            <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-6 border border-white/20">
+                                <h4 className="font-bold text-gray-900 mb-4">Trending Now</h4>
+                                <div className="space-y-3">
+                                    <div className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                                        <p className="font-medium text-gray-800">#TruthOrDrink</p>
+                                        <p className="text-sm text-gray-600">15.2K posts</p>
+                                    </div>
+                                    <div className="p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
+                                        <p className="font-medium text-gray-800">#Gaming</p>
+                                        <p className="text-sm text-gray-600">8.7K posts</p>
+                                    </div>
+                                    <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
+                                        <p className="font-medium text-gray-800">#Community</p>
+                                        <p className="text-sm text-gray-600">5.1K posts</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-6 border border-white/20">
+                                <h4 className="font-bold text-gray-900 mb-4">Quick Actions</h4>
+                                <div className="space-y-3">
+                                    <button className="w-full p-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 font-medium">
+                                        🎮 Play Truth or Drink
+                                    </button>
+                                    <button className="w-full p-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all duration-200 font-medium">
+                                        👥 Find Friends
+                                    </button>
+                                    <button className="w-full p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium">
+                                        ⚙️ Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className='text-black font-bold text-lg text-center mb-5 mt-5'>The End</div>
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
-                    <div className="bg-white shadow-lg rounded-lg p-6 max-w-sm text-center">
-                        <h2 className="text-xl font-semibold text-gray-800">Please Login to Continue</h2>
-                        <p className="text-gray-600 mt-2">Access your account to post and interact with others.</p>
-                        <a href="/login" className="mt-4 inline-block bg-blue-500 text-white px-5 py-2 rounded-lg text-lg font-medium transition hover:bg-blue-600 hover:shadow-md">Log in</a>
+                <div className="min-h-screen flex items-center justify-center p-6">
+                    <div className="bg-white/90 backdrop-blur-lg shadow-2xl rounded-3xl p-12 max-w-md text-center border border-white/20">
+                        <div className="text-6xl mb-6">🔐</div>
+                        <h2 className="text-3xl font-bold text-gray-800 mb-4">Welcome Back!</h2>
+                        <p className="text-gray-600 mb-8 text-lg">Please sign in to continue to your feed and connect with your community.</p>
+                        <a 
+                            href="/login" 
+                            className="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold transition-all duration-200 hover:from-blue-600 hover:to-purple-700 hover:shadow-xl transform hover:-translate-y-1"
+                        >
+                            Sign In Now
+                        </a>
                     </div>
                 </div>
             )}
+            
             <ToastContainer
-                position="bottom-left" 
+                position="bottom-right" 
                 autoClose={3000} 
                 hideProgressBar={false}
                 newestOnTop={true}
@@ -253,7 +427,12 @@ useEffect(() => {
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
-                toastStyle={{ backgroundColor: "black", color: "white" }} 
+                toastStyle={{ 
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", 
+                    color: "white",
+                    borderRadius: "12px",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.2)"
+                }} 
             />
         </div>
     );

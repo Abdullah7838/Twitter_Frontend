@@ -128,7 +128,7 @@ useEffect(()=>{
         }
     }, [email, posts]);
 
-    function timeAgo(date) {
+function timeAgo(date) {
         const now = new Date();
         const diff = now - new Date(date);
 

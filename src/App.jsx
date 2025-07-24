@@ -10,7 +10,7 @@ import Account from './components/Account';
 import Navbar from './components/Navbar';
 import Admin from './Admin/Admin';
 import NotFound from './components/NotFound';
-
+import UsersAdmin from './Admin/UsersAdmin';
 // This is a functional wrapper component to conditionally render the Navbar
 function NavbarWrapper({ logout }) {
   const location = useLocation();
@@ -67,6 +67,7 @@ class App extends Component {
           <Route path="/comments/:id" element={<Comments email={this.state.email} />} />
           <Route path="/account/:email" element={<Account logout={this.logout} myemail={this.state.email} Uemail={this.state.email}/>} />
           <Route path="/admin" element={<Admin email={this.state.email} />} />
+          <Route path="/admin/:email" element={<UsersAdmin />} />
           <Route path="/not-found" element={<NotFound />} />
 
           <Route path="/" element={<Home email={this.state.email} />} />
